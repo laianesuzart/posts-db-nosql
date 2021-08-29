@@ -1,3 +1,4 @@
+from ..errors.posts import NonexistentPostError
 from dataclasses import dataclass
 from datetime import datetime
 from ..services import db
@@ -10,14 +11,22 @@ class Post:
     tags: list
     content: str
     id: int = 1
-    created_at: datetime = ''
-    updated_at: datetime = ''
+    created_at: str = ''
+    updated_at: str = ''
 
     @staticmethod
     def get_all_posts():
         posts_list = list(db.posts.find())
         [post.pop('_id') for post in posts_list]
         return posts_list
+
+    @staticmethod
+    def get_post_by_id(id):
+        post = db.posts.find_one({'id': id})
+        if not post:
+            raise NonexistentPostError(id)
+        post.pop('_id')
+        return post
 
     def get_id(self):
         try:

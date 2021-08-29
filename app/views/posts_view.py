@@ -1,6 +1,6 @@
-from flask import Flask, request
-from flask.json import jsonify
+from flask import Flask, request, jsonify
 from ..models import Post
+from ..errors.posts import NonexistentPostError
 
 
 def posts_view(app: Flask):
@@ -9,7 +9,7 @@ def posts_view(app: Flask):
         data = request.get_json()
         post = Post(**data)
         post.save_post()
-        return {'msg': 'Post criado com sucesso'}, 201
+        return {'msg': 'Successful created post.'}, 201
 
     
     @app.get('/posts')
@@ -20,7 +20,10 @@ def posts_view(app: Flask):
     
     @app.get('/posts/<int:id>')
     def read_post_by_id(id: int):
-        ...
+        try:
+            return Post.get_post_by_id(id), 200
+        except NonexistentPostError as err:
+            return err.message, 404
 
     @app.patch('/posts/<int:id>')
     def update_post(id: int):
