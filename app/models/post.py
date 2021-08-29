@@ -1,7 +1,7 @@
-from ..errors.posts import NonexistentPostError
 from dataclasses import dataclass
 from datetime import datetime
 from ..services import db
+from .exc import NonexistentPostError
 
 
 @dataclass
@@ -27,6 +27,13 @@ class Post:
             raise NonexistentPostError(id)
         post.pop('_id')
         return post
+    
+    @staticmethod
+    def update_post(old_post: dict, **kwargs):
+        for key in kwargs:
+            old_post.update({key: kwargs[key]})
+        old_post.update({'updated_at': datetime.utcnow()})
+        db.posts.find_one_and_update({'id': old_post['id']}, {'$set': old_post})
 
     def get_id(self):
         try:
@@ -41,7 +48,4 @@ class Post:
         self.updated_at = datetime.utcnow()
         db.posts.insert_one(self.__dict__)
 
-    def update_post(self, **kwargs):
-        for key in kwargs:
-            self.key = kwargs[key]
-        self.updated_at = datetime.utcnow()
+
