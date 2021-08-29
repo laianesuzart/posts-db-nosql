@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 from ..services import db
-from .exc import NonexistentPostError
+from .exc import NonexistentPostError, InvalidDataError
+
+POST_KEYS = {'title', 'author', 'tags', 'content'}
 
 
 @dataclass
@@ -14,6 +16,19 @@ class Post:
     created_at: str = ''
     updated_at: str = ''
 
+    def get_id(self):
+        try:
+            posts_list = self.get_all_posts()
+            self.id = posts_list[-1]['id'] + 1
+        except IndexError:
+            ...
+
+    def save_post(self):
+        self.get_id()
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+        db.posts.insert_one(self.__dict__)
+
     @staticmethod
     def get_all_posts():
         posts_list = list(db.posts.find())
@@ -21,7 +36,7 @@ class Post:
         return posts_list
 
     @staticmethod
-    def get_post_by_id(id):
+    def get_post_by_id(id: int):
         post = db.posts.find_one({'id': id})
         if not post:
             raise NonexistentPostError(id)
@@ -36,22 +51,21 @@ class Post:
         db.posts.find_one_and_update({'id': old_post['id']}, {'$set': old_post})
 
     @staticmethod
-    def delete_post(id):
+    def delete_post(id: int):
         deleted_post = db.posts.find_one_and_delete({'id': id})
         if not deleted_post:
             raise NonexistentPostError(id)
         deleted_post.pop('_id')
         return deleted_post
 
-    def get_id(self):
-        try:
-            posts_list = self.get_all_posts()
-            self.id = posts_list[-1]['id'] + 1
-        except IndexError:
-            ...
+    @staticmethod
+    def has_all_arguments(**kwargs):
+        for key in POST_KEYS:
+            if key not in kwargs:
+                raise InvalidDataError(f'Key {key} not found.')
 
-    def save_post(self):
-        self.get_id()
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
-        db.posts.insert_one(self.__dict__)
+    @staticmethod
+    def has_only_valid_arguments(**kwargs):
+        for key in kwargs:
+            if key not in POST_KEYS:
+                raise InvalidDataError(f'Key {key} not allowed.')
