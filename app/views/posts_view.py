@@ -1,6 +1,6 @@
 from flask import Flask, request
+from flask.json import jsonify
 from ..models import Post
-from ..services import save_post, get_all_posts
 
 
 def posts_view(app: Flask):
@@ -8,13 +8,14 @@ def posts_view(app: Flask):
     def create_post():
         data = request.get_json()
         post = Post(**data)
-        save_post(post)
+        post.save_post()
         return {'msg': 'Post criado com sucesso'}, 201
 
     
     @app.get('/posts')
     def read_posts():
-        return get_all_posts(), 200
+        posts_list = Post.get_all_posts()
+        return jsonify(posts_list), 200
 
     
     @app.get('/posts/<int:id>')

@@ -1,1 +1,5 @@
-from .services import save_post, get_all_posts
+from pymongo import MongoClient
+
+client = MongoClient('mongodb://localhost:27017/')
+
+db = client['kenzie']

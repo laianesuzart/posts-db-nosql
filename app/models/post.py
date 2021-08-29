@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import ClassVar
+from ..services import db
 
 
 @dataclass
@@ -9,16 +9,30 @@ class Post:
     author: str
     tags: list
     content: str
-    created_at: datetime = datetime.utcnow()
-    updated_at: datetime = datetime.utcnow()
-    last_id: ClassVar[int] = [1]
-    post_id: int = last_id[-1]
+    id: int = 1
+    created_at: datetime = ''
+    updated_at: datetime = ''
+
+    @staticmethod
+    def get_all_posts():
+        posts_list = list(db.posts.find())
+        [post.pop('_id') for post in posts_list]
+        return posts_list
+
+    def get_id(self):
+        try:
+            posts_list = self.get_all_posts()
+            self.id = posts_list[-1]['id'] + 1
+        except IndexError:
+            ...
+
+    def save_post(self):
+        self.get_id()
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+        db.posts.insert_one(self.__dict__)
 
     def update_post(self, **kwargs):
         for key in kwargs:
             self.key = kwargs[key]
         self.updated_at = datetime.utcnow()
-    
-    @classmethod
-    def update_last_id(cls):
-        cls.last_id.append(cls.last_id[-1] + 1)
