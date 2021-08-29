@@ -69,3 +69,7 @@ class Post:
         for key in kwargs:
             if key not in POST_KEYS:
                 raise InvalidDataError(f'Key {key} not allowed.')
+            if not type(kwargs[key]) == str and not key == 'tags':
+                raise InvalidDataError(f'Key {key} should be a string.')
+            if key == 'tags' and not type(kwargs[key]) == list:
+                raise InvalidDataError(f'Key {key} should be a list of strings.')
