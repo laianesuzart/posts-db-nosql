@@ -36,4 +36,8 @@ def posts_view(app: Flask):
     
     @app.delete('/posts/<int:id>')
     def delete_post(id: int):
-        ...
+        try: 
+           deleted_post = Post.delete_post(id)
+           return deleted_post, 200
+        except NonexistentPostError as err:
+            return err.message, 404

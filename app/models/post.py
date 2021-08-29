@@ -35,6 +35,14 @@ class Post:
         old_post.update({'updated_at': datetime.utcnow()})
         db.posts.find_one_and_update({'id': old_post['id']}, {'$set': old_post})
 
+    @staticmethod
+    def delete_post(id):
+        deleted_post = db.posts.find_one_and_delete({'id': id})
+        if not deleted_post:
+            raise NonexistentPostError(id)
+        deleted_post.pop('_id')
+        return deleted_post
+
     def get_id(self):
         try:
             posts_list = self.get_all_posts()
@@ -47,5 +55,3 @@ class Post:
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
         db.posts.insert_one(self.__dict__)
-
-
