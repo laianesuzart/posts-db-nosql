@@ -10,8 +10,8 @@ def posts_view(app: Flask):
             Post.has_all_arguments(**data)
             Post.has_only_valid_arguments(**data)
             post = Post(**data)
-            post.save_post()
-            return {'msg': 'Successful created post.'}, 201
+            new_post = post.save_post()
+            return new_post, 201
         except InvalidDataError as err:
             return err.message, 406
     

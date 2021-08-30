@@ -28,19 +28,18 @@ class Post:
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
         db.posts.insert_one(self.__dict__)
+        return db.posts.find_one({'id': self.id}, {'_id': False})
 
     @staticmethod
     def get_all_posts():
-        posts_list = list(db.posts.find())
-        [post.pop('_id') for post in posts_list]
+        posts_list = list(db.posts.find({}, {'_id': False}))
         return posts_list
 
     @staticmethod
     def get_post_by_id(id: int):
-        post = db.posts.find_one({'id': id})
+        post = db.posts.find_one({'id': id}, {'_id': False})
         if not post:
             raise NonexistentPostError(id)
-        post.pop('_id')
         return post
     
     @staticmethod
@@ -52,10 +51,9 @@ class Post:
 
     @staticmethod
     def delete_post(id: int):
-        deleted_post = db.posts.find_one_and_delete({'id': id})
+        deleted_post = db.posts.find_one_and_delete({'id': id}, {'_id': False})
         if not deleted_post:
             raise NonexistentPostError(id)
-        deleted_post.pop('_id')
         return deleted_post
 
     @staticmethod
