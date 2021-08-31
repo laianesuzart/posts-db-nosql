@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
-from ..services import db
 from .exc import NonexistentPostError, InvalidDataError
+from pymongo import MongoClient
+
+client = MongoClient('mongodb://localhost:27017/')
+
+db = client['kenzie']
 
 POST_KEYS = {'title', 'author', 'tags', 'content'}
 
@@ -12,7 +16,7 @@ class Post:
     author: str
     tags: list
     content: str
-    id: int = 1
+    id: int = None
     created_at: str = ''
     updated_at: str = ''
 
@@ -21,7 +25,7 @@ class Post:
             posts_list = self.get_all_posts()
             self.id = posts_list[-1]['id'] + 1
         except IndexError:
-            ...
+            self.id = 1
 
     def save_post(self):
         self.get_id()
