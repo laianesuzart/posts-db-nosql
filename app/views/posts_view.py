@@ -13,7 +13,7 @@ def posts_view(app: Flask):
             new_post = post.save_post()
             return new_post, 201
         except InvalidDataError as err:
-            return err.message, 406
+            return err.message, 400
     
 
     @app.get('/posts')
@@ -40,7 +40,7 @@ def posts_view(app: Flask):
         except NonexistentPostError as err:
             return err.message, 404
         except InvalidDataError as err:
-            return err.message, 406
+            return err.message, 400
 
 
     @app.delete('/posts/<int:id>')
