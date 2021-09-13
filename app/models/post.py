@@ -1,75 +1,79 @@
-from dataclasses import dataclass
+from pymongo import MongoClient
+from dotenv import dotenv_values
 from datetime import datetime
 from .exc import NonexistentPostError, InvalidDataError
-from pymongo import MongoClient
+
+config = dotenv_values('.env')
+db_name = config['DB_NAME']
 
 client = MongoClient('mongodb://localhost:27017/')
 
-db = client['kenzie']
-
-POST_KEYS = {'title', 'author', 'tags', 'content'}
+db = client[db_name]
 
 
-@dataclass
 class Post:
-    title: str
-    author: str
-    tags: list
-    content: str
-    id: int = None
-    created_at: str = ''
-    updated_at: str = ''
+    POST_KEYS = {'title', 'author', 'tags', 'content'}
+
+    def __init__(self, **kwargs):
+        for key in self.POST_KEYS:
+            if key not in kwargs:
+                raise InvalidDataError(f'Key {key} not found.')
+        self.has_only_valid_arguments(**kwargs)
+
+        self.title = kwargs['title']
+        self.author = kwargs['author']
+        self.tags = kwargs['tags']
+        self.content = kwargs['content']
 
     def get_id(self):
         try:
-            posts_list = self.get_all_posts()
+            posts_list = self.get_all()
             self.id = posts_list[-1]['id'] + 1
         except IndexError:
             self.id = 1
 
-    def save_post(self):
+    def save(self):
         self.get_id()
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
         db.posts.insert_one(self.__dict__)
+
         return db.posts.find_one({'id': self.id}, {'_id': False})
 
     @staticmethod
-    def get_all_posts():
+    def get_all():
         posts_list = list(db.posts.find({}, {'_id': False}))
         return posts_list
 
     @staticmethod
-    def get_post_by_id(id: int):
+    def get_by_id(id: int):
         post = db.posts.find_one({'id': id}, {'_id': False})
         if not post:
             raise NonexistentPostError(id)
         return post
-    
-    @staticmethod
-    def update_post(old_post: dict, **kwargs):
-        for key in kwargs:
-            old_post.update({key: kwargs[key]})
-        old_post.update({'updated_at': datetime.utcnow()})
-        db.posts.find_one_and_update({'id': old_post['id']}, {'$set': old_post})
 
     @staticmethod
-    def delete_post(id: int):
+    def update(id: int, **kwargs):
+        post = Post.get_by_id(id)
+        Post.has_only_valid_arguments(**kwargs)
+        for key in kwargs:
+            post.update({key: kwargs[key]})
+        post.update({'updated_at': datetime.utcnow()})
+        db.posts.find_one_and_update({'id': id}, {'$set': post})
+
+        return Post.get_by_id(id)
+
+    @staticmethod
+    def delete(id: int):
         deleted_post = db.posts.find_one_and_delete({'id': id}, {'_id': False})
         if not deleted_post:
             raise NonexistentPostError(id)
         return deleted_post
-
-    @staticmethod
-    def has_all_arguments(**kwargs):
-        for key in POST_KEYS:
-            if key not in kwargs:
-                raise InvalidDataError(f'Key {key} not found.')
-
-    @staticmethod
-    def has_only_valid_arguments(**kwargs):
+ 
+    @classmethod
+    def has_only_valid_arguments(cls, **kwargs):
         for key in kwargs:
-            if key not in POST_KEYS:
+            if key not in cls.POST_KEYS:
                 raise InvalidDataError(f'Key {key} not allowed.')
             if not type(kwargs[key]) == str and not key == 'tags':
                 raise InvalidDataError(f'Key {key} should be a string.')
