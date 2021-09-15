@@ -33,12 +33,12 @@ As seguintes ferramentas foram utilizadas na construção do projeto:
 ![Rota post](https://i.imgur.com/Agq89ry.png)
 #### GET /posts - Retorna uma lista com todos os posts
 ![Rota get](https://i.imgur.com/JS367ZE.png)
-#### GET /posts<id> - Retorna o post com id correspondente ou erro 404
+#### GET /posts/<:id> - Retorna o post com id correspondente ou erro 404
 ![Rota get - id](https://i.imgur.com/nolzYzJ.png)
 ![Rota get - id erro](https://i.imgur.com/pUxuneT.png)
-#### PATCH /posts<id> - Retorna o post atualizado
+#### PATCH /posts/<:id> - Retorna o post atualizado
 ![Rota patch](https://i.imgur.com/iX5dxdz.png)
-#### DELETE /posts - Retorna o post deletado
+#### DELETE /posts/<:id> - Retorna o post deletado
 ![Rota delete](https://i.imgur.com/v2fHqyw.png)
 
 ## Autora
